@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Host {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  ipAddress   String
+  mask        String
+  vlanId      String
+  vlan        Vlan        @relation(fields: [vlanId], references: [id], onDelete: Restrict)
+  groups      GroupHost[]
+  sourcePolicyEntries      PolicyEntry[] @relation("PolicyEntrySourceHost")
+  destinationPolicyEntries PolicyEntry[] @relation("PolicyEntryDestinationHost")
+  createdAt   DateTime    @default(now())
+
+  @@index([name])
+  @@index([vlanId])
+}
+
+model Group {
+  id                        String        @id @default(cuid())
+  name                      String        @unique
+  vlanId                    String
+  vlan                      Vlan          @relation(fields: [vlanId], references: [id], onDelete: Restrict)
+  hosts                     GroupHost[]
+  sourcePolicyEntries       PolicyEntry[] @relation("PolicyEntrySourceGroup")
+  destinationPolicyEntries  PolicyEntry[] @relation("PolicyEntryDestinationGroup")
+  createdAt                 DateTime      @default(now())
+
+  @@index([vlanId])
+}
+
+model Vlan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  tag         Int      @unique
+  ipAddress   String?
+  mask        String?
+  description String?
+  hosts       Host[]
+  groups      Group[]
+  policy      Policy?
+  sourcePolicyEntries      PolicyEntry[] @relation("PolicyEntrySourceVlan")
+  destinationPolicyEntries PolicyEntry[] @relation("PolicyEntryDestinationVlan")
+  createdAt   DateTime @default(now())
+}
+
+model GroupHost {
+  groupId String
+  hostId  String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  host    Host   @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, hostId])
+}
+
+model Policy {
+  id                   String           @id @default(cuid())
+  name                 String           @unique
+  description          String
+  vlanId               String           @unique
+  vlan                 Vlan             @relation(fields: [vlanId], references: [id], onDelete: Restrict)
+  internetAccess       Boolean          @default(false)
+  needsGeneration      Boolean          @default(false)
+  entries              PolicyEntry[]
+  generatedFiles       GeneratedPolicy[]
+  outgoingReflectiveLinks PolicyLink[]   @relation("PolicyReflectiveSource")
+  incomingReflectiveLinks PolicyLink[]   @relation("PolicyReflectiveTarget")
+  createdAt            DateTime         @default(now())
+}
+
+model PolicyEntry {
+  id                 String   @id @default(cuid())
+  policyId           String
+  position           Int      @default(0)
+  sourceHostId       String?
+  sourceGroupId      String?
+  destinationHostId  String?
+  destinationGroupId String?
+  sourceVlanId       String?
+  destinationVlanId  String?
+  sourcePort         String?
+  protocol           String?
+  destinationPort    String?
+  reflectiveOfEntryId String? @unique
+  policy             Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  sourceHost         Host?    @relation("PolicyEntrySourceHost", fields: [sourceHostId], references: [id], onDelete: Cascade)
+  sourceGroup        Group?   @relation("PolicyEntrySourceGroup", fields: [sourceGroupId], references: [id], onDelete: Cascade)
+  destinationHost    Host?    @relation("PolicyEntryDestinationHost", fields: [destinationHostId], references: [id], onDelete: Cascade)
+  destinationGroup   Group?   @relation("PolicyEntryDestinationGroup", fields: [destinationGroupId], references: [id], onDelete: Cascade)
+  sourceVlan         Vlan?    @relation("PolicyEntrySourceVlan", fields: [sourceVlanId], references: [id], onDelete: Cascade)
+  destinationVlan    Vlan?    @relation("PolicyEntryDestinationVlan", fields: [destinationVlanId], references: [id], onDelete: Cascade)
+  reflectiveOfEntry  PolicyEntry? @relation("ReflectivePolicyEntry", fields: [reflectiveOfEntryId], references: [id], onDelete: Cascade)
+  reflectiveEntry    PolicyEntry? @relation("ReflectivePolicyEntry")
+  createdAt          DateTime @default(now())
+
+  @@index([policyId, position])
+}
+
+model PolicyLink {
+  sourcePolicyId   String
+  targetPolicyId   String
+  active           Boolean  @default(true)
+  needsGeneration  Boolean  @default(true)
+  sourcePolicy     Policy   @relation("PolicyReflectiveSource", fields: [sourcePolicyId], references: [id], onDelete: Cascade)
+  targetPolicy     Policy   @relation("PolicyReflectiveTarget", fields: [targetPolicyId], references: [id], onDelete: Cascade)
+
+  @@id([sourcePolicyId, targetPolicyId])
+  @@index([targetPolicyId, needsGeneration])
+}
+
+model GeneratedPolicy {
+  id          String   @id @default(cuid())
+  policyId    String
+  policy      Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  switchId    String
+  switchName  String
+  fileName    String
+  content     String   @db.Text
+  status      String
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([policyId, createdAt])
+}

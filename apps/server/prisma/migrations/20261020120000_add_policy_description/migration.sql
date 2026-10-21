@@ -1,0 +1,2 @@
+ALTER TABLE "Policy" ADD COLUMN "description" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Policy" ALTER COLUMN "description" DROP DEFAULT;

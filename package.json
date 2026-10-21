@@ -1,0 +1,15 @@
+{
+  "name": "extreme-acl-manager",
+  "private": true,
+  "workspaces": [
+    "apps/server",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "bun run --filter @acl-manager/server dev",
+    "dev:web": "bun run --filter @acl-manager/web dev",
+    "build": "bun run --filter @acl-manager/web build && bun run --filter @acl-manager/server build",
+    "db:generate": "bun run --filter @acl-manager/server db:generate",
+    "db:migrate": "bun run --filter @acl-manager/server db:migrate"
+  }
+}

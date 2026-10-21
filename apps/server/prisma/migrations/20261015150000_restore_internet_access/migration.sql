@@ -1,0 +1,2 @@
+ALTER TABLE "Policy"
+ADD COLUMN "internetAccess" BOOLEAN NOT NULL DEFAULT false;

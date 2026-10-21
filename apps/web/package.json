@@ -1,0 +1,19 @@
+{
+  "name": "@acl-manager/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vue-tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@xterm/xterm": "^6.0.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.0",
+    "typescript": "~5.8.0",
+    "vite": "^6.2.0",
+    "vue-tsc": "^2.2.0"
+  }
+}
