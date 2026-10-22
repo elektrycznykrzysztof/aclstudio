@@ -165,6 +165,7 @@ function describeEndpoint(host: Host | null, group: Group | null, vlan: Vlan | n
         </header>
 
         <p class="policy-search-description">{{ result.policy.description }}</p>
+        <p v-if="result.entry.description" class="policy-search-entry-description">Entry description: {{ result.entry.description }}</p>
         <div class="policy-search-route">
           <span>{{ describeEndpoint(result.entry.sourceHost, result.entry.sourceGroup, result.entry.sourceVlan) }}</span>
           <b aria-label="to">→</b>

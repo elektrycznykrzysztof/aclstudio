@@ -9,7 +9,7 @@ export const hostRoutes = new Elysia({ prefix: '/api/hosts' })
     return host
   }, {
     body: t.Object({
-      name: t.String({ minLength: 1 }),
+      name: t.String({ minLength: 1, maxLength: 8 }),
       description: t.String({ minLength: 1 }),
       ipAddress: t.String({ minLength: 1 }),
       mask: t.String({ minLength: 1 }),
@@ -19,7 +19,7 @@ export const hostRoutes = new Elysia({ prefix: '/api/hosts' })
   .patch('/:hostId', ({ params, body }) => updateHost(params.hostId, body), {
     params: t.Object({ hostId: t.String() }),
     body: t.Object({
-      name: t.String({ minLength: 1 }),
+      name: t.String({ minLength: 1, maxLength: 8 }),
       description: t.String({ minLength: 1 }),
       ipAddress: t.String({ minLength: 1 }),
       mask: t.String({ minLength: 1 }),

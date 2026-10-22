@@ -176,6 +176,7 @@ button:disabled { cursor: not-allowed; opacity: .56; }
 .policy-entry-optional-fields .field { gap: 5px; }
 .policy-entry-optional-fields .field > span { color: #8c9890; font-size: 10.4px; font-weight: 500; }
 .policy-entry-optional-fields .field > span small { color: #a0aaa3; font-size: 9.1px; font-weight: 400; }
+.policy-entry-description, .policy-search-entry-description { margin: 0; color: #68796e; font-size: 11.7px; line-height: 1.45; }
 .policy-entry-list { display: grid; gap: 8px; margin: 12px 0; padding: 10px; border-radius: 6px; background: #f7f9f6; }
 .policy-entry-summary { display: grid; gap: 4px; padding-bottom: 7px; border-bottom: 1px solid #e9eee9; }
 .policy-entry-summary:last-child { padding-bottom: 0; border-bottom: 0; }
@@ -325,6 +326,7 @@ button:disabled { cursor: not-allowed; opacity: .56; }
 .app-shell[data-theme="dark"] .endpoint-detail h4 { color: #c2d0c6; }
 .app-shell[data-theme="dark"] .endpoint-detail-fields dt, .app-shell[data-theme="dark"] .endpoint-group-hosts > strong, .app-shell[data-theme="dark"] .endpoint-empty, .app-shell[data-theme="dark"] .entry-match-details dt { color: #9aa99f; }
 .app-shell[data-theme="dark"] .endpoint-detail-fields dd, .app-shell[data-theme="dark"] .entry-match-details dd { color: #c2d0c6; }
+.app-shell[data-theme="dark"] .policy-entry-description, .app-shell[data-theme="dark"] .policy-search-entry-description { color: #b8c7bd; }
 .app-shell[data-theme="dark"] .endpoint-group-hosts { border-color: #303d35; }
 .app-shell[data-theme="dark"] .endpoint-group-host { border-color: #344138; background: #1a241f; }
 .app-shell[data-theme="dark"] .entry-match-details > div { border-color: #344138; }

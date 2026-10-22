@@ -28,7 +28,7 @@ const hasValidMask = computed(() => {
   const mask = Number(maskValue.value)
   return mask >= 0 && mask <= 32
 })
-const canSave = computed(() => Number.isInteger(form.tag) && form.tag > 0 && form.name.trim().length > 0 && hasCompleteAddress.value && hasValidMask.value)
+const canSave = computed(() => Number.isInteger(form.tag) && form.tag > 0 && form.name.trim().length > 0 && form.name.trim().length <= 8 && hasCompleteAddress.value && hasValidMask.value)
 
 function startEdit(vlan: Vlan) {
   editingId.value = vlan.id
@@ -63,7 +63,7 @@ async function removeVlan(vlan: Vlan) {
     <section class="panel form-panel">
       <div class="panel-heading"><div><span class="panel-index">{{ editingId ? 'EDIT VLAN' : 'NEW VLAN' }}</span><h3>{{ editingId ? 'Update VLAN' : 'Add a VLAN' }}</h3></div><span class="panel-icon">{{ editingId ? '↻' : '◈' }}</span></div>
       <form class="form-stack" @submit.prevent="submitVlan">
-        <label class="field"><span>Name <i>Required</i></span><input v-model="form.name" required maxlength="200" placeholder="e.g. Corporate" /></label>
+        <label class="field"><span>Name <i>Required · max 8</i></span><input v-model="form.name" required maxlength="8" placeholder="e.g. CorpLAN" /></label>
         <label class="field"><span>Tag <i>Required · whole number</i></span><input v-model.number="form.tag" required type="number" min="1" step="1" placeholder="e.g. 20" /></label>
         <div class="field-row">
           <label class="field"><span>IP address <small>Optional</small></span><input v-model="form.ipAddress" inputmode="decimal" placeholder="e.g. 192.168.20.0" /></label>

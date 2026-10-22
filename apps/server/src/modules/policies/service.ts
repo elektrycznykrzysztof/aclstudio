@@ -1,6 +1,6 @@
 import { AppError } from '../../shared/app-error'
 import { isRecordNotFoundError, isUniqueConstraintError } from '../../shared/prisma-errors'
-import { optionalPort, optionalProtocol, requireText } from '../../shared/validation'
+import { optionalPort, optionalProtocol, optionalText, requireText } from '../../shared/validation'
 import { getSwitchConfig } from '../switches/config'
 import { uploadPolicyFile } from '../switches/sftp-client'
 import { findVlan } from '../vlans/service'
@@ -41,6 +41,7 @@ export interface PolicyEntryInput {
   destination: PolicyEntitySelection
   protocol?: string
   destinationPort?: string
+  description?: string
 }
 
 export interface CreatePolicyInput {
@@ -229,6 +230,7 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
       sourcePort: null,
       protocol: optionalProtocol(entry.protocol),
       destinationPort: optionalPort(entry.destinationPort),
+      description: optionalText(entry.description, 'Entry description'),
     }
   })
 
@@ -270,6 +272,7 @@ function createReflectiveEntries(
       destinationVlanId: source.type === 'VLAN' ? source.id : null,
       sourcePort,
       protocol,
+      description: entries[sourcePosition].description,
     }
     const signature = [
       destinationVlanId,

@@ -1,6 +1,6 @@
 import { AppError } from '../../shared/app-error'
 import { isForeignKeyConstraintError, isRecordNotFoundError, isUniqueConstraintError } from '../../shared/prisma-errors'
-import { optionalText, requireCidrPrefix, requireIpv4, requireText } from '../../shared/validation'
+import { optionalText, requireCidrPrefix, requireIpv4, requireTextWithLimit } from '../../shared/validation'
 import { deleteVlan as deleteVlanRecord, findVlan, insertVlan, listVlans, updateVlan as updateVlanRecord, vlanExists } from './repository'
 
 export { findVlan, listVlans, vlanExists }
@@ -53,7 +53,7 @@ function normalizeVlan(input: VlanInput) {
   }
 
   return {
-    name: requireText(input.name, 'VLAN name'),
+    name: requireTextWithLimit(input.name, 'VLAN name', 8),
     tag: input.tag,
     ipAddress: optionalIpAddress ? requireIpv4(optionalIpAddress, 'IP address') : null,
     mask: optionalMask ? requireCidrPrefix(optionalMask, 'Mask') : null,

@@ -15,6 +15,7 @@ type PolicyForFormatting = {
     sourcePort: string | null
     protocol: string | null
     destinationPort: string | null
+    description: string | null
     reflectiveOfEntryId: string | null
   }>
 }
@@ -42,7 +43,7 @@ export function formatPolicy(policy: PolicyForFormatting): string {
   return [
     ...permits,
     ...formatLocalNetworkDenies(),
-    ...(policy.internetAccess ? [formatInternetPermit()] : []),
+    policy.internetAccess ? formatInternetPermit() : formatInternetDeny(),
   ].join('\n\n') + '\n'
 }
 
@@ -66,14 +67,14 @@ function formatPermitEntry(
   isReflective: boolean,
 ): string {
   const entryName = formatAclName(
-    'permit_' + String(entryNumber).padStart(4, '0') + '_' + sourceHost.name + '_to_' + destinationHost.name,
-  ) + (isReflective ? '_reflective' : '')
+    'perm_' + String(entryNumber).padStart(4, '0') + '_' + sourceHost.name + '_to_' + destinationHost.name,
+  ) + (isReflective ? '_r' : '')
   const matchLines = [
     '    source-address ' + sourceHost.ipAddress + '/' + sourceHost.mask + ';',
     '    destination-address ' + destinationHost.ipAddress + '/' + destinationHost.mask + ';',
   ]
-  if (sourcePort) matchLines.push('    source-port ' + sourcePort + ';')
   if (protocol) matchLines.push('    protocol ' + protocol + ';')
+  if (sourcePort) matchLines.push('    source-port ' + sourcePort + ';')
   if (destinationPort) matchLines.push('    destination-port ' + destinationPort + ';')
 
   return [
@@ -98,12 +99,25 @@ function formatLocalNetworkDenies(): string[] {
 
 function formatInternetPermit(): string {
   return [
-    'entry permit_INTERNET {',
+    'entry perm_INTERNET {',
     '  if match all {',
     '    destination-address 0.0.0.0/0;',
     '  }',
     '  then {',
     '    permit;',
+    '  }',
+    '}',
+  ].join('\n')
+}
+
+function formatInternetDeny(): string {
+  return [
+    'entry deny_INTERNET {',
+    '  if match all {',
+    '    destination-address 0.0.0.0/0;',
+    '  }',
+    '  then {',
+    '    deny;',
     '  }',
     '}',
   ].join('\n')

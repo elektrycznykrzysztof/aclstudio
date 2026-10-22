@@ -26,6 +26,7 @@ export interface PolicyEntryRecord {
   sourcePort: string | null
   protocol: string | null
   destinationPort: string | null
+  description: string | null
 }
 
 export interface ReflectiveEntryPlan {
@@ -39,6 +40,7 @@ export interface ReflectiveEntryPlan {
   destinationVlanId: string | null
   sourcePort: string | null
   protocol: string | null
+  description: string | null
 }
 
 export interface ReflectivePolicyPlan {
@@ -325,6 +327,7 @@ async function addReflectiveEntries(
         sourcePort: entry.sourcePort,
         protocol: entry.protocol,
         destinationPort: null,
+        description: entry.description,
         reflectiveOfEntryId,
       },
     })

@@ -20,6 +20,7 @@ interface PolicyEntryForm {
   destination: string
   protocol: string
   destinationPort: string
+  description: string
 }
 
 interface PolicyForm {
@@ -43,7 +44,7 @@ const props = defineProps<{
   onGenerate: (policyId: string, switchId: string) => Promise<GeneratedPolicy[]>
 }>()
 
-const emptyEntry = (): PolicyEntryForm => ({ source: '', destination: '', protocol: '', destinationPort: '' })
+const emptyEntry = (): PolicyEntryForm => ({ source: '', destination: '', protocol: '', destinationPort: '', description: '' })
 const form = reactive<PolicyForm>({
   description: '',
   vlanId: '',
@@ -149,6 +150,7 @@ function startEdit(policy: Policy) {
             : 'VLAN:' + (entry.destinationVlan?.id ?? ''),
         protocol: entry.protocol ?? '',
         destinationPort: entry.destinationPort ?? '',
+        description: entry.description ?? '',
       })),
   })
   activeTab.value = 'create'
@@ -172,7 +174,7 @@ async function submitPolicy() {
     const source = parseSelection(entry.source)
     const destination = parseSelection(entry.destination)
     if (!source || !destination) return
-    entries.push({ source, destination, protocol: entry.protocol, destinationPort: entry.destinationPort })
+    entries.push({ source, destination, protocol: entry.protocol, destinationPort: entry.destinationPort, description: entry.description })
   }
 
   const saved = await props.onSave({
@@ -284,6 +286,7 @@ async function generatePolicy(policyId: string, switchId: string): Promise<Gener
               <label class="field"><span>Protocol <small>Optional</small></span><input v-model="entry.protocol" maxlength="32" placeholder="e.g. tcp" /></label>
               <label class="field"><span>Port <small>Optional</small></span><input v-model="entry.destinationPort" maxlength="11" placeholder="e.g. 443 or 8000-8010" /></label>
             </div>
+            <label class="field"><span>Description <small>Optional</small></span><input v-model="entry.description" maxlength="200" placeholder="Describe this policy entry" /></label>
           </article>
           <small class="field-hint">Selecting a group expands it to its hosts. Selecting a VLAN uses its configured IP address and mask as a single endpoint.</small>
           <small class="field-hint">A cross-VLAN destination adds a linked reflective entry. If the destination VLAN has no policy yet, one is created automatically.</small>

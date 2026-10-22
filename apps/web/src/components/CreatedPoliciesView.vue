@@ -59,6 +59,7 @@ function getVlanSearchValues(vlan: Vlan | null): string[] {
 
 function getPolicyEntrySearchText(entry: Policy['entries'][number]): string {
   return [
+    entry.description ?? '',
     ...getHostSearchValues(entry.sourceHost),
     ...getGroupSearchValues(entry.sourceGroup),
     ...getVlanSearchValues(entry.sourceVlan),
@@ -191,6 +192,7 @@ function downloadGeneratedFile(result: GeneratedPolicy) {
                   </span>
                 </button>
                 <div v-if="expandedEntries[entry.id]" class="created-entry-details">
+                  <p v-if="entry.description" class="policy-entry-description">{{ entry.description }}</p>
                   <div class="policy-entry-detail-columns">
                     <PolicyEndpointDetails label="Source details" :host="entry.sourceHost" :group="entry.sourceGroup" :vlan="entry.sourceVlan" />
                     <PolicyEndpointDetails label="Destination details" :host="entry.destinationHost" :group="entry.destinationGroup" :vlan="entry.destinationVlan" />

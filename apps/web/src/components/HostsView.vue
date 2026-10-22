@@ -55,7 +55,7 @@ async function removeHost(host: Host) {
     <section class="panel form-panel">
       <div class="panel-heading"><div><span class="panel-index">{{ editingId ? 'EDIT HOST' : 'NEW HOST' }}</span><h3>{{ editingId ? 'Update host' : 'Add a host' }}</h3></div><span class="panel-icon">{{ editingId ? '↻' : '＋' }}</span></div>
       <form class="form-stack" @submit.prevent="submitHost">
-        <label class="field"><span>Host name <i>Required</i></span><input v-model="form.name" required maxlength="200" placeholder="e.g. finance-laptop-01" /></label>
+        <label class="field"><span>Host name <i>Required · max 8</i></span><input v-model="form.name" required maxlength="8" placeholder="e.g. fin-lap1" /></label>
         <label class="field"><span>Description <i>Required</i></span><input v-model="form.description" required maxlength="200" placeholder="Short note about this endpoint" /></label>
         <div class="field-row">
           <label class="field"><span>IP address <i>Required</i></span><input v-model="form.ipAddress" required inputmode="decimal" placeholder="10.20.4.18" /></label>

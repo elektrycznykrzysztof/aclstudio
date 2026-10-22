@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia'
 import { createVlan, deleteVlan, listVlans, updateVlan } from './service'
 
 const vlanBody = t.Object({
-  name: t.String({ minLength: 1 }),
+  name: t.String({ minLength: 1, maxLength: 8 }),
   tag: t.Number(),
   ipAddress: t.Optional(t.String()),
   mask: t.Optional(t.String()),

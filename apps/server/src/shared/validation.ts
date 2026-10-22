@@ -9,6 +9,14 @@ export function requireText(value: string, fieldName: string): string {
   return normalized
 }
 
+export function requireTextWithLimit(value: string, fieldName: string, maxLength: number): string {
+  const normalized = requireText(value, fieldName)
+  if (normalized.length > maxLength) {
+    throw new AppError(`${fieldName} must be ${maxLength} characters or fewer.`, 400)
+  }
+  return normalized
+}
+
 export function requireIpv4(value: string, fieldName: string): string {
   const normalized = requireText(value, fieldName)
   if (!isIPv4(normalized)) throw new AppError(`${fieldName} must be a valid IPv4 address.`, 400)

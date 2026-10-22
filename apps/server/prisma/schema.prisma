@@ -89,6 +89,7 @@ model PolicyEntry {
   sourcePort         String?
   protocol           String?
   destinationPort    String?
+  description        String?
   reflectiveOfEntryId String? @unique
   policy             Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
   sourceHost         Host?    @relation("PolicyEntrySourceHost", fields: [sourceHostId], references: [id], onDelete: Cascade)

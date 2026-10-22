@@ -1,4 +1,4 @@
-import { requireIpv4, requireIpv4Mask, requireText } from '../../shared/validation'
+import { requireIpv4, requireIpv4Mask, requireText, requireTextWithLimit } from '../../shared/validation'
 import { AppError } from '../../shared/app-error'
 import { isRecordNotFoundError } from '../../shared/prisma-errors'
 import { deleteHost as deleteHostRecord, insertHost, listHosts, updateHost as updateHostRecord } from './repository'
@@ -50,7 +50,7 @@ async function normalizeHost(input: {
   const vlanId = requireText(input.vlanId, 'VLAN')
   if (!(await vlanExists(vlanId))) throw new AppError('Selected VLAN does not exist.', 400)
   return {
-    name: requireText(input.name, 'Name'),
+    name: requireTextWithLimit(input.name, 'Host name', 8),
     description: requireText(input.description, 'Description'),
     ipAddress: requireIpv4(input.ipAddress, 'IP address'),
     mask: requireIpv4Mask(input.mask, 'Mask'),

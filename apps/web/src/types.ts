@@ -37,6 +37,7 @@ export interface PolicyEntryInput {
   destination: PolicyEntitySelection
   protocol: string
   destinationPort: string
+  description: string
 }
 
 export interface PolicyEntry {
@@ -50,6 +51,7 @@ export interface PolicyEntry {
   sourcePort: string | null
   protocol: string | null
   destinationPort: string | null
+  description: string | null
   reflectiveOfEntryId: string | null
 }
 

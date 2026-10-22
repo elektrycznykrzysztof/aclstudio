@@ -16,6 +16,7 @@ const policyBody = t.Object({
     destination: entitySelection,
     protocol: t.Optional(t.String()),
     destinationPort: t.Optional(t.String()),
+    description: t.Optional(t.String({ maxLength: 200 })),
   })),
 })
 

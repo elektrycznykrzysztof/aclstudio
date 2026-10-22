@@ -77,6 +77,7 @@ export function parseDatabaseBackup(input: unknown): ImportTables {
       sourcePort: readNullableString(row, 'sourcePort', path),
       protocol: readNullableString(row, 'protocol', path),
       destinationPort: readNullableString(row, 'destinationPort', path),
+      description: row.description === undefined ? null : readNullableString(row, 'description', path),
       reflectiveOfEntryId: readNullableString(row, 'reflectiveOfEntryId', path),
       createdAt: readDate(row, 'createdAt', path),
     })),
