@@ -29,12 +29,15 @@ const props = defineProps<{
 
 const searchInput = ref('')
 const searchTerm = ref('')
+const showReflexiveRules = ref(false)
 
 const searchResults = computed<PolicyEntryMatch[]>(() => {
   const normalizedSearchTerm = searchTerm.value.trim().toLocaleLowerCase()
   if (!normalizedSearchTerm) return []
 
   return props.policies.flatMap((policy) => policy.entries.flatMap((entry) => {
+    if (!showReflexiveRules.value && entry.reflectiveOfEntryId) return []
+
     const matchedHosts = [
       ...findMatchingEndpoints(entry.sourceHost, entry.sourceGroup, entry.sourceVlan, 'Source', normalizedSearchTerm),
       ...findMatchingEndpoints(entry.destinationHost, entry.destinationGroup, entry.destinationVlan, 'Destination', normalizedSearchTerm),
@@ -144,10 +147,25 @@ function describeEndpoint(host: Host | null, group: Group | null, vlan: Vlan | n
       <button v-if="searchTerm || searchInput" class="button button-secondary" type="button" @click="clearSearch">Clear</button>
     </form>
 
+    <button
+      class="policy-search-reflexive-toggle"
+      :class="{ enabled: showReflexiveRules }"
+      type="button"
+      role="switch"
+      :aria-checked="showReflexiveRules"
+      @click="showReflexiveRules = !showReflexiveRules"
+    >
+      <span class="policy-search-reflexive-copy">
+        <strong>Show Reflexive Rules</strong>
+        <small>{{ showReflexiveRules ? 'Reflective entries are included in results.' : 'Reflective entries are hidden from results.' }}</small>
+      </span>
+      <span class="policy-search-reflexive-track"><span></span></span>
+    </button>
+
     <div v-if="!searchTerm" class="policy-search-state">
       <span class="policy-search-state-icon">⌕</span>
-      <strong>Search all saved policy entries</strong>
-      <p>Enter a full address or a fragment such as <code>10.20.</code>.</p>
+      <strong>Search policy entries</strong>
+      <p>Enter a full address or a fragment such as <code>10.20.</code>. Enable reflexive rules to include linked entries.</p>
     </div>
     <div v-else-if="searchResults.length" class="policy-search-results" aria-live="polite">
       <div class="policy-search-result-summary">

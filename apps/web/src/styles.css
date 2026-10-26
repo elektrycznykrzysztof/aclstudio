@@ -340,6 +340,16 @@ button:disabled { cursor: not-allowed; opacity: .56; }
 .policy-search-form .button { min-height: 37px; }
 .policy-search-form .button-primary { margin: 0; }
 .policy-search-form .button-secondary { justify-content: center; }
+.policy-search-reflexive-toggle { display: flex; width: min(330px, 100%); min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 8px 10px; border: 1px solid #dce6e0; border-radius: 7px; color: #536259; background: #f9fcfa; text-align: left; font: inherit; }
+.policy-search-reflexive-toggle:focus-visible { outline: 2px solid #159b91; outline-offset: 2px; }
+.policy-search-reflexive-copy { display: grid; gap: 3px; }
+.policy-search-reflexive-copy strong { font-size: 11.7px; font-weight: 650; }
+.policy-search-reflexive-copy small { color: #89968e; font-size: 10.4px; }
+.policy-search-reflexive-track { position: relative; width: 32px; height: 18px; flex: 0 0 32px; border-radius: 18px; background: #cfd8d2; transition: .18s; }
+.policy-search-reflexive-track > span { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: white; transition: .18s; }
+.policy-search-reflexive-toggle.enabled { border-color: #8acdc5; background: #effaf8; }
+.policy-search-reflexive-toggle.enabled .policy-search-reflexive-track { background: #159b91; }
+.policy-search-reflexive-toggle.enabled .policy-search-reflexive-track > span { transform: translateX(14px); }
 .policy-search-state { display: grid; min-height: 190px; align-content: center; justify-items: center; margin-top: 17px; padding: 20px; border: 1px dashed #dce7df; border-radius: 8px; background: #fafcf9; text-align: center; }
 .policy-search-state-icon { display: grid; width: 36px; height: 36px; place-items: center; margin-bottom: 10px; border: 1px solid #cce9e4; border-radius: 10px; color: #087f8c; background: #e8f7f3; font-size: 23px; }
 .policy-search-state strong { color: #526158; font-size: 13px; font-weight: 600; }
@@ -374,6 +384,10 @@ button:disabled { cursor: not-allowed; opacity: .56; }
 .app-shell[data-theme="dark"] .policy-search-state strong, .app-shell[data-theme="dark"] .policy-search-result-summary strong { color: #c2d0c6; }
 .app-shell[data-theme="dark"] .policy-search-state p, .app-shell[data-theme="dark"] .policy-search-result-summary { color: #9aa99f; }
 .app-shell[data-theme="dark"] .policy-search-state code, .app-shell[data-theme="dark"] .policy-search-result-summary code { color: #75e0d7; background: #172d30; }
+.app-shell[data-theme="dark"] .policy-search-reflexive-toggle { border-color: #34463f; color: #c2d0c6; background: #17211c; }
+.app-shell[data-theme="dark"] .policy-search-reflexive-copy small { color: #9aa99f; }
+.app-shell[data-theme="dark"] .policy-search-reflexive-toggle.enabled { border-color: #31575b; background: #172d30; }
+.app-shell[data-theme="dark"] .policy-search-reflexive-toggle.enabled .policy-search-reflexive-track { background: #168f88; }
 .app-shell[data-theme="dark"] .policy-search-result { border-color: #344138; background: #18221c; }
 .app-shell[data-theme="dark"] .policy-search-policy-name { color: var(--policy-accent); }
 .app-shell[data-theme="dark"] .policy-search-vlan, .app-shell[data-theme="dark"] .policy-search-description { color: #9aa99f; }
