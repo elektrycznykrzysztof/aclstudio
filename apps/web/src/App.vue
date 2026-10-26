@@ -17,13 +17,13 @@ interface DatabaseImportResult {
   counts: Record<string, number>
 }
 
-const sections: Array<{ id: Section; label: string; number: string; hint: string }> = [
-  { id: 'groups', label: 'Groups', number: '01', hint: 'Host collections' },
-  { id: 'hosts', label: 'Hosts', number: '02', hint: 'Source endpoints' },
-  { id: 'policies', label: 'Policies', number: '03', hint: 'Access definitions' },
-  { id: 'vlans', label: 'VLANs', number: '04', hint: 'Network segments' },
-  { id: 'terminal', label: 'Terminal', number: '05', hint: 'Interactive switch CLI' },
-  { id: 'administration', label: 'Administration', number: '06', hint: 'Database backup and restore' },
+const sections: Array<{ id: Section; label: string }> = [
+  { id: 'groups', label: 'Groups' },
+  { id: 'hosts', label: 'Hosts' },
+  { id: 'policies', label: 'Policies' },
+  { id: 'vlans', label: 'VLANs' },
+  { id: 'terminal', label: 'Terminal' },
+  { id: 'administration', label: 'Administration' },
 ]
 
 const activeSection = ref<Section>('groups')
@@ -41,16 +41,11 @@ const generatingPolicyId = ref('')
 const savedColorScheme = window.localStorage.getItem('acl-color-scheme')
 const colorSchemes: ColorScheme[] = ['light', 'dark', 'light-blue', 'dark-blue']
 const colorScheme = ref<ColorScheme>(
-  colorSchemes.includes(savedColorScheme as ColorScheme) ? savedColorScheme as ColorScheme : 'light',
+  colorSchemes.includes(savedColorScheme as ColorScheme) ? savedColorScheme as ColorScheme : 'light-blue',
 )
 const baseColorScheme = computed(() => colorScheme.value.startsWith('dark') ? 'dark' : 'light')
 
 const activeSectionDetails = computed(() => sections.find(({ id }) => id === activeSection.value)!)
-const counts = computed(() => [
-  { label: 'Hosts', value: hosts.value.length },
-  { label: 'Groups', value: groups.value.length },
-  { label: 'Policies', value: policies.value.length },
-])
 
 onMounted(loadWorkspace)
 watch(colorScheme, (scheme) => window.localStorage.setItem('acl-color-scheme', scheme))
@@ -292,9 +287,7 @@ function errorMessage(error: unknown) {
           type="button"
           @click="activeSection = section.id; pageError = ''; notice = ''"
         >
-          <span class="nav-number">{{ section.number }}</span>
           <span>{{ section.label }}</span>
-          <span v-if="section.id === 'hosts'" class="nav-count">{{ hosts.length }}</span>
         </button>
       </nav>
 
@@ -304,7 +297,6 @@ function errorMessage(error: unknown) {
           <span><strong>{{ switches.length }} {{ switches.length === 1 ? 'switch' : 'switches' }}</strong><small>Available for delivery</small></span>
           <span class="connection-arrow">↗</span>
         </div>
-        <div class="sidebar-foot"><span class="foot-dot"></span> Local workspace <span class="version">v1.0</span></div>
       </div>
     </aside>
 
@@ -327,21 +319,8 @@ function errorMessage(error: unknown) {
       </header>
 
       <section class="page-wrap">
-        <section v-if="activeSection !== 'terminal'" class="stats-grid" aria-label="Workspace totals">
-          <article v-for="(count, index) in counts" :key="count.label" class="stat-card" :class="['stat-' + count.label.toLowerCase(), { 'stat-accent': index === 2 }]">
-            <div class="stat-label">{{ count.label }}<span class="stat-mark">{{ ['⌘', '◉', '↗'][index] }}</span></div>
-            <div class="stat-value">{{ String(count.value).padStart(2, '0') }}</div>
-            <div class="stat-foot"><span class="stat-foot-dot"></span> In workspace</div>
-          </article>
-        </section>
-
         <div v-if="pageError" class="feedback feedback-error" role="alert"><span class="feedback-icon">!</span><span>{{ pageError }}</span><button type="button" aria-label="Dismiss" @click="pageError = ''">×</button></div>
         <div v-if="notice" class="feedback feedback-success" role="status"><span class="feedback-icon">✓</span><span>{{ notice }}</span><button type="button" aria-label="Dismiss" @click="notice = ''">×</button></div>
-
-        <section class="section-heading">
-          <div><div class="section-kicker">{{ activeSectionDetails.number }} <span>/</span> {{ activeSection === 'terminal' ? 'CONNECT' : 'CONFIGURE' }}</div><h2>{{ activeSectionDetails.label }}</h2><p>{{ activeSectionDetails.hint }}</p></div>
-          <div v-if="activeSection !== 'terminal'" class="section-actions"><span class="saved-indicator"><span></span> {{ activeSection === 'administration' ? 'Manage database backups' : 'Changes save to database' }}</span></div>
-        </section>
 
         <div v-if="isLoading" class="loading-state"><span class="loading-spinner"></span> Connecting to workspace…</div>
         <template v-else>

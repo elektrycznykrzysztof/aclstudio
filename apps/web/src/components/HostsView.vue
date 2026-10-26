@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import SearchableSelect from './SearchableSelect.vue'
 import type { Host, SearchOption, Vlan } from '../types'
 
@@ -22,12 +22,77 @@ const props = defineProps<{
 
 const form = reactive<HostForm>({ name: '', description: '', ipAddress: '', mask: '', vlanId: '' })
 const editingId = ref<string | null>(null)
+const hostSearchQuery = ref('')
+const currentHostPage = ref(1)
+const hostsPerPage = ref(5)
+const hostListViewport = ref<HTMLElement | null>(null)
+let hostListResizeObserver: ResizeObserver | null = null
+
+const filteredHosts = computed(() => {
+  const query = hostSearchQuery.value.trim().toLocaleLowerCase()
+  if (!query) return props.hosts
+
+  return props.hosts.filter((host) => [
+    host.name,
+    host.description,
+    host.vlan.name,
+    String(host.vlan.tag),
+    host.ipAddress,
+    host.mask,
+  ].join(' ').toLocaleLowerCase().includes(query))
+})
+const hostPageCount = computed(() => Math.max(1, Math.ceil(filteredHosts.value.length / hostsPerPage.value)))
+const visibleHosts = computed(() => {
+  const startIndex = (currentHostPage.value - 1) * hostsPerPage.value
+  return filteredHosts.value.slice(startIndex, startIndex + hostsPerPage.value)
+})
+
 const vlanOptions = computed<SearchOption[]>(() => props.vlans.map((vlan) => ({
     value: vlan.id,
     label: vlan.name,
     detail: `Tag ${vlan.tag}${vlan.ipAddress && vlan.mask ? ` · ${vlan.ipAddress}/${vlan.mask}` : ''}`,
     searchText: [vlan.name, vlan.tag, vlan.ipAddress, vlan.mask, vlan.description].filter(Boolean).join(' '),
   })))
+
+watch(hostSearchQuery, () => {
+  currentHostPage.value = 1
+})
+
+watch(filteredHosts, async () => {
+  currentHostPage.value = 1
+  await nextTick()
+  updateHostsPerPage()
+})
+
+watch(hostPageCount, (pageCount) => {
+  currentHostPage.value = Math.min(currentHostPage.value, pageCount)
+})
+
+onMounted(() => {
+  if (hostListViewport.value) {
+    hostListResizeObserver = new ResizeObserver(updateHostsPerPage)
+    hostListResizeObserver.observe(hostListViewport.value)
+  }
+  void nextTick(updateHostsPerPage)
+})
+
+onBeforeUnmount(() => {
+  hostListResizeObserver?.disconnect()
+})
+
+function updateHostsPerPage() {
+  const viewport = hostListViewport.value
+  if (!viewport || viewport.clientHeight === 0) return
+
+  const firstHostRow = viewport.querySelector<HTMLElement>('.host-row')
+  const rowHeight = firstHostRow?.getBoundingClientRect().height ?? 64
+  const visibleRowCount = Math.max(1, Math.floor(viewport.clientHeight / rowHeight))
+  if (hostsPerPage.value !== visibleRowCount) hostsPerPage.value = visibleRowCount
+}
+
+function goToHostPage(page: number) {
+  currentHostPage.value = Math.min(Math.max(page, 1), hostPageCount.value)
+}
 
 function startEdit(host: Host) {
   editingId.value = host.id
@@ -70,17 +135,33 @@ async function removeHost(host: Host) {
       </form>
     </section>
 
-    <section class="panel list-panel">
+    <section class="panel list-panel host-inventory-panel">
       <div class="panel-heading list-heading"><div><span class="panel-index">HOST INVENTORY</span><h3>Created hosts <span class="inline-count">{{ hosts.length }}</span></h3></div><span class="quiet-label">SOURCE ENDPOINTS</span></div>
-      <div v-if="hosts.length" class="host-list">
-        <article v-for="host in hosts" :key="host.id" class="host-row">
-          <div class="host-avatar">{{ host.name.slice(0, 2).toUpperCase() }}</div>
-          <div class="host-info"><strong>{{ host.name }}</strong><span>{{ host.description }}</span></div>
-          <div class="host-network-details"><code class="host-address">{{ host.ipAddress }}<small>/{{ host.mask }}</small></code><span class="vlan-badge">{{ host.vlan.name }} · {{ host.vlan.tag }}</span></div>
-          <div class="row-actions"><button type="button" aria-label="Edit host" title="Edit host" @click="startEdit(host)">Edit</button><button class="delete-action" type="button" aria-label="Delete host" title="Delete host" @click="removeHost(host)">Delete</button></div>
-        </article>
+      <label v-if="hosts.length" class="host-inventory-search">
+        <span aria-hidden="true">⌕</span>
+        <input v-model="hostSearchQuery" type="search" autocomplete="off" placeholder="Search name, description, VLAN, or IP…" aria-label="Search hosts" />
+        <button v-if="hostSearchQuery" type="button" aria-label="Clear host search" @click="hostSearchQuery = ''">×</button>
+      </label>
+      <div ref="hostListViewport" class="host-list-viewport">
+        <div v-if="!hosts.length" class="empty-state host-inventory-empty"><span class="empty-symbol">⌁</span><strong>No hosts yet</strong><p>Add a host to start building your source inventory.</p></div>
+        <div v-else-if="!filteredHosts.length" class="host-search-empty"><strong>No matching hosts</strong><span>Try another name, description, VLAN, or IP fragment.</span></div>
+        <div v-else class="host-list">
+          <article v-for="host in visibleHosts" :key="host.id" class="host-row">
+            <div class="host-avatar">{{ host.name.slice(0, 2).toUpperCase() }}</div>
+            <div class="host-info"><strong>{{ host.name }}</strong><span>{{ host.description }}</span></div>
+            <div class="host-network-details"><code class="host-address">{{ host.ipAddress }}<small>/{{ host.mask }}</small></code><span class="vlan-badge">{{ host.vlan.name }} · {{ host.vlan.tag }}</span></div>
+            <div class="row-actions"><button type="button" aria-label="Edit host" title="Edit host" @click="startEdit(host)">Edit</button><button class="delete-action" type="button" aria-label="Delete host" title="Delete host" @click="removeHost(host)">Delete</button></div>
+          </article>
+        </div>
       </div>
-      <div v-else class="empty-state"><span class="empty-symbol">⌁</span><strong>No hosts yet</strong><p>Add a host to start building your source inventory.</p></div>
+      <div v-if="filteredHosts.length" class="host-pagination">
+        <span>{{ filteredHosts.length }} {{ filteredHosts.length === 1 ? 'host' : 'hosts' }}</span>
+        <div class="host-pagination-controls">
+          <button type="button" :disabled="currentHostPage === 1" @click="goToHostPage(currentHostPage - 1)">Previous</button>
+          <span>Page {{ currentHostPage }} of {{ hostPageCount }}</span>
+          <button type="button" :disabled="currentHostPage === hostPageCount" @click="goToHostPage(currentHostPage + 1)">Next</button>
+        </div>
+      </div>
     </section>
   </div>
 </template>

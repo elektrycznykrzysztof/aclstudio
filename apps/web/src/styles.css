@@ -577,3 +577,110 @@ button:disabled { cursor: not-allowed; opacity: .56; }
 .app-shell[data-theme="dark"] .button-primary:hover:not(:disabled) { background: #83baff; }
 .app-shell[data-theme="dark"] .button-generate { color: #092a1a; background: #75d69a; }
 .app-shell[data-theme="dark"] .button-generate:hover:not(:disabled) { background: #8ae5ab; }
+
+.host-inventory-panel { display: flex; height: max(250px, calc(100vh - 320px)); min-height: 250px; flex-direction: column; overflow: hidden; }
+.host-inventory-search { display: flex; min-height: 38px; align-items: center; gap: 8px; margin-bottom: 9px; padding: 0 9px; border: 1px solid #e1e7e2; border-radius: 6px; color: #87958c; background: #fcfdfb; }
+.host-inventory-search > span { font-size: 19px; line-height: 1; }
+.host-inventory-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #34443c; background: transparent; font-size: 12px; }
+.host-inventory-search input::placeholder { color: #aab4ad; }
+.host-inventory-search input:focus { box-shadow: none; }
+.host-inventory-search button { padding: 0 2px; border: 0; color: #7b8b80; background: transparent; font-size: 19px; }
+.host-list-viewport { min-height: 0; flex: 1; overflow: hidden; }
+.host-list-viewport > .host-inventory-empty { height: 100%; min-height: 0; }
+.host-inventory-panel .host-row { display: grid; height: 64px; min-height: 64px; grid-template-columns: 31px minmax(50px,1fr) minmax(150px,1.35fr) max-content; column-gap: 6px; overflow: hidden; }
+.host-inventory-panel .host-avatar { grid-column: 1; }
+.host-inventory-panel .host-info { grid-column: 2; }
+.host-inventory-panel .host-network-details { display: grid; min-width: 0; grid-column: 3; grid-template-columns: minmax(0,1fr) minmax(0,.75fr); align-items: center; justify-items: stretch; gap: 6px; margin-left: 0; }
+.host-inventory-panel .host-address { display: block; width: 100%; min-width: 0; margin-left: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; }
+.host-inventory-panel .row-actions { grid-column: 4; gap: 2px; margin-left: 0; }
+.vlan-badge { max-width: 140px; overflow: hidden; padding: 4px 6px; border-radius: 5px; color: #82618b; background: #f4edf7; font: 10.4px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
+.host-pagination { display: flex; min-height: 39px; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #edf0ec; color: #849188; font-size: 10.4px; }
+.host-pagination-controls { display: flex; align-items: center; gap: 8px; }
+.host-pagination-controls button { min-height: 27px; padding: 0 8px; border: 1px solid #e1e7e2; border-radius: 5px; color: #5b7062; background: #f8fbf8; font-size: 10.4px; }
+.host-pagination-controls button:hover:not(:disabled) { border-color: #b8d2bd; background: #eef7ef; }
+.host-pagination-controls button:disabled { cursor: default; opacity: .45; }
+.host-pagination-controls > span { min-width: 74px; color: #7f8c84; text-align: center; }
+.host-search-empty { display: grid; height: 100%; align-content: center; justify-items: center; gap: 5px; color: #819087; text-align: center; }
+.host-search-empty strong { color: #526158; font-size: 12px; }
+.host-search-empty span { font-size: 10.4px; }
+.app-shell[data-theme="dark"] .host-inventory-search { border-color: #344138; color: #9aa99f; background: #141d18; }
+.app-shell[data-theme="dark"] .host-inventory-search input { color: #dbe5de; }
+.app-shell[data-theme="dark"] .host-inventory-search input::placeholder { color: #77877c; }
+.app-shell[data-theme="dark"] .host-inventory-search button { color: #9aa99f; }
+.app-shell[data-theme="dark"] .host-pagination { border-color: #303d35; color: #9aa99f; }
+.app-shell[data-theme="dark"] .host-pagination-controls button { border-color: #344138; color: #c2d0c6; background: #202b24; }
+.app-shell[data-theme="dark"] .host-pagination-controls button:hover:not(:disabled) { border-color: #42694c; background: #26372c; }
+.app-shell[data-theme="dark"] .host-search-empty { color: #9aa99f; }
+.app-shell[data-theme="dark"] .host-search-empty strong { color: #c2d0c6; }
+.app-shell[data-theme="dark"] .host-inventory-panel .host-info strong { color: #c2d0c6; }
+.app-shell[data-theme="dark"] .host-inventory-panel .host-info span { color: #9aa99f; }
+.app-shell[data-theme="dark"] .host-inventory-panel .host-address { color: #a6c9b0; }
+.app-shell[data-theme="dark"] .host-inventory-panel .vlan-badge { color: #d2b5ef; background: #302541; }
+
+@media (max-width: 800px) {
+  .host-inventory-panel { height: max(250px, calc(100vh - 300px)); }
+}
+
+@media (max-width: 640px) {
+  .host-inventory-panel .host-row { height: 84px; min-height: 84px; grid-template-columns: 31px minmax(0,1fr) auto; grid-template-rows: 1fr 1fr; gap: 2px 8px; padding: 6px 0; }
+  .host-inventory-panel .host-avatar { grid-column: 1; grid-row: 1 / 3; }
+  .host-inventory-panel .host-info { grid-column: 2; grid-row: 1; align-self: end; gap: 2px; }
+  .host-inventory-panel .host-network-details { grid-column: 2 / 4; grid-row: 2; align-self: start; grid-template-columns: minmax(85px,1fr) minmax(55px,.7fr); gap: 6px; margin-left: 0; overflow: hidden; }
+  .host-inventory-panel .host-address { font-size: 10.4px; }
+  .host-inventory-panel .vlan-badge { max-width: 100px; font-size: 9.1px; }
+  .host-inventory-panel .row-actions { grid-column: 3; grid-row: 1 / 3; flex-direction: column; justify-content: center; gap: 0; margin-left: 0; }
+  .host-pagination { flex-wrap: wrap; }
+  .host-pagination-controls { gap: 4px; }
+  .host-pagination-controls button { padding: 0 6px; }
+  .host-pagination-controls > span { min-width: 64px; }
+}
+
+.vlan-inventory-panel { display: flex; height: max(250px, calc(100vh - 320px)); min-height: 250px; flex-direction: column; overflow: hidden; }
+.vlan-inventory-panel .list-heading { flex: 0 0 auto; }
+.vlan-inventory-search { display: flex; min-height: 38px; flex: 0 0 auto; align-items: center; gap: 8px; margin-bottom: 9px; padding: 0 9px; border: 1px solid #e1e7e2; border-radius: 6px; color: #87958c; background: #fcfdfb; }
+.vlan-inventory-search > span { font-size: 19px; line-height: 1; }
+.vlan-inventory-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: #34443c; background: transparent; font-size: 12px; }
+.vlan-inventory-search input::placeholder { color: #aab4ad; }
+.vlan-inventory-search input:focus { box-shadow: none; }
+.vlan-inventory-search button { padding: 0 2px; border: 0; color: #7b8b80; background: transparent; font-size: 19px; }
+.vlan-list-viewport { min-height: 0; flex: 1; overflow: hidden; }
+.vlan-list-viewport > .vlan-inventory-empty { height: 100%; min-height: 0; }
+.vlan-search-empty { display: grid; height: 100%; align-content: center; justify-items: center; gap: 5px; color: #819087; text-align: center; }
+.vlan-search-empty strong { color: #526158; font-size: 12px; }
+.vlan-search-empty span { font-size: 10.4px; }
+.vlan-inventory-panel .vlan-card { height: 75px; min-height: 75px; overflow: hidden; }
+.vlan-inventory-panel .vlan-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vlan-pagination { display: flex; min-height: 39px; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #edf0ec; color: #849188; font-size: 10.4px; }
+.vlan-pagination-controls { display: flex; align-items: center; gap: 8px; }
+.vlan-pagination-controls button { min-height: 27px; padding: 0 8px; border: 1px solid #e1e7e2; border-radius: 5px; color: #5b7062; background: #f8fbf8; font-size: 10.4px; }
+.vlan-pagination-controls button:hover:not(:disabled) { border-color: #b8d2bd; background: #eef7ef; }
+.vlan-pagination-controls button:disabled { cursor: default; opacity: .45; }
+.vlan-pagination-controls > span { min-width: 74px; color: #7f8c84; text-align: center; }
+.app-shell[data-theme="dark"] .vlan-inventory-search { border-color: #344138; color: #9aa99f; background: #141d18; }
+.app-shell[data-theme="dark"] .vlan-inventory-search input { color: #dbe5de; }
+.app-shell[data-theme="dark"] .vlan-inventory-search input::placeholder { color: #77877c; }
+.app-shell[data-theme="dark"] .vlan-inventory-search button { color: #9aa99f; }
+.app-shell[data-theme="dark"] .vlan-search-empty { color: #9aa99f; }
+.app-shell[data-theme="dark"] .vlan-search-empty strong { color: #c2d0c6; }
+.app-shell[data-theme="dark"] .vlan-pagination { border-color: #303d35; color: #9aa99f; }
+.app-shell[data-theme="dark"] .vlan-pagination-controls button { border-color: #344138; color: #c2d0c6; background: #202b24; }
+.app-shell[data-theme="dark"] .vlan-pagination-controls button:hover:not(:disabled) { border-color: #42694c; background: #26372c; }
+
+@media (max-width: 800px) {
+  .vlan-inventory-panel { height: max(250px, calc(100vh - 300px)); }
+}
+
+@media (max-width: 640px) {
+  .vlan-inventory-panel .vlan-card { height: 96px; min-height: 96px; display: grid; grid-template-columns: 40px minmax(0,1fr) max-content; grid-template-rows: repeat(3,minmax(0,1fr)); gap: 2px 8px; padding: 8px 0; }
+  .vlan-inventory-panel .vlan-tag-mark { grid-column: 1; grid-row: 1 / 4; }
+  .vlan-inventory-panel .vlan-info { grid-column: 2; grid-row: 1 / 4; align-content: center; gap: 2px; }
+  .vlan-inventory-panel .vlan-info strong { font-size: 13px; }
+  .vlan-inventory-panel .vlan-info span, .vlan-inventory-panel .vlan-info small { font-size: 10.4px; }
+  .vlan-inventory-panel .vlan-card .row-actions { width: auto; grid-column: 3; grid-row: 1 / 4; flex-direction: column; justify-content: center; gap: 0; margin-left: 0; }
+  .vlan-pagination { flex-wrap: wrap; }
+  .vlan-pagination-controls { gap: 4px; }
+  .vlan-pagination-controls button { padding: 0 6px; }
+  .vlan-pagination-controls > span { min-width: 64px; }
+}
+
+.page-wrap { padding-top: 28px; }
