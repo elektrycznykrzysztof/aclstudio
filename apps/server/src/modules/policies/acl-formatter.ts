@@ -55,7 +55,7 @@ function formatSelfPermit(policyName: string, vlan: VlanForFormatting): string {
     throw new Error(`VLAN ${vlan.name} requires an IP address and mask to generate its Allow Self entry.`)
   }
 
-  const entryName = formatAclName(policyName) + ' Allow Self'
+  const entryName = formatAclName(policyName) + '_Allow_Self'
   const address = vlan.ipAddress + '/' + vlan.mask
   return [
     'entry "' + entryName + '" {',
