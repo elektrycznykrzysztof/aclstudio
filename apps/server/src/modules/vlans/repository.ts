@@ -1,4 +1,5 @@
 import { prisma } from '../../db/prisma'
+import { markPoliciesDependingOnVlan } from '../policies/dependencies-repository'
 
 export function listVlans() {
   return prisma.vlan.findMany({ orderBy: { tag: 'asc' } })
@@ -29,7 +30,18 @@ export function updateVlan(vlanId: string, data: {
   mask: string | null
   description: string | null
 }) {
-  return prisma.vlan.update({ where: { id: vlanId }, data })
+  return prisma.$transaction(async (transaction) => {
+    const existingVlan = await transaction.vlan.findUnique({
+      where: { id: vlanId },
+      select: { ipAddress: true, mask: true },
+    })
+    const updatedVlan = await transaction.vlan.update({ where: { id: vlanId }, data })
+    const networkChanged = existingVlan
+      && (existingVlan.ipAddress !== data.ipAddress || existingVlan.mask !== data.mask)
+
+    if (networkChanged) await markPoliciesDependingOnVlan(transaction, vlanId)
+    return updatedVlan
+  })
 }
 
 export function deleteVlan(vlanId: string) {

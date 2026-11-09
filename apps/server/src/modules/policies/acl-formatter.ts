@@ -4,6 +4,8 @@ type GroupForFormatting = { hosts: Array<{ host: HostForFormatting }> }
 type VlanForFormatting = { name: string; ipAddress: string | null; mask: string | null }
 
 type PolicyForFormatting = {
+  name: string
+  vlan: VlanForFormatting
   internetAccess: boolean
   entries: Array<{
     sourceHost: HostForFormatting | null
@@ -41,10 +43,31 @@ export function formatPolicy(policy: PolicyForFormatting): string {
   })
 
   return [
+    formatSelfPermit(policy.name, policy.vlan),
     ...permits,
     ...formatLocalNetworkDenies(),
     policy.internetAccess ? formatInternetPermit() : formatInternetDeny(),
   ].join('\n\n') + '\n'
+}
+
+function formatSelfPermit(policyName: string, vlan: VlanForFormatting): string {
+  if (!vlan.ipAddress || !vlan.mask) {
+    throw new Error(`VLAN ${vlan.name} requires an IP address and mask to generate its Allow Self entry.`)
+  }
+
+  const entryName = formatAclName(policyName) + ' Allow Self'
+  const address = vlan.ipAddress + '/' + vlan.mask
+  return [
+    'entry "' + entryName + '" {',
+    '  if match all {',
+    '    source-address ' + address + ';',
+    '    destination-address ' + address + ';',
+    '  }',
+    '  then {',
+    '    permit;',
+    '  }',
+    '}',
+  ].join('\n')
 }
 
 function expandEndpoints(

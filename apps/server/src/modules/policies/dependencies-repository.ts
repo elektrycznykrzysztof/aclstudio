@@ -22,10 +22,30 @@ export async function markPoliciesDependingOnGroup(
   await markPoliciesForChangedEndpoints(transaction, [], [groupId])
 }
 
+export async function markPoliciesDependingOnVlan(
+  transaction: PolicyTransaction,
+  vlanId: string,
+) {
+  const assignedPolicy = await transaction.policy.findUnique({
+    where: { vlanId },
+    select: { id: true },
+  })
+
+  await markPoliciesForChangedEndpoints(
+    transaction,
+    [],
+    [],
+    [vlanId],
+    assignedPolicy ? [assignedPolicy.id] : [],
+  )
+}
+
 async function markPoliciesForChangedEndpoints(
   transaction: PolicyTransaction,
   hostIds: string[],
   groupIds: string[],
+  vlanIds: string[] = [],
+  directlyAffectedPolicyIds: string[] = [],
 ) {
   const endpointConditions: Prisma.PolicyEntryWhereInput[] = []
 
@@ -43,17 +63,24 @@ async function markPoliciesForChangedEndpoints(
     )
   }
 
-  if (!endpointConditions.length) return
+  if (vlanIds.length) {
+    endpointConditions.push(
+      { sourceVlanId: { in: vlanIds } },
+      { destinationVlanId: { in: vlanIds } },
+    )
+  }
 
-  const affectedEntries = await transaction.policyEntry.findMany({
-    where: { OR: endpointConditions },
-    select: {
-      policyId: true,
-      reflectiveEntry: { select: { policyId: true } },
-      reflectiveOfEntry: { select: { policyId: true } },
-    },
-  })
-  const affectedPolicyIds = new Set<string>()
+  const affectedEntries = endpointConditions.length
+    ? await transaction.policyEntry.findMany({
+      where: { OR: endpointConditions },
+      select: {
+        policyId: true,
+        reflectiveEntry: { select: { policyId: true } },
+        reflectiveOfEntry: { select: { policyId: true } },
+      },
+    })
+    : []
+  const affectedPolicyIds = new Set<string>(directlyAffectedPolicyIds)
   const affectedPolicyLinks = new Map<string, { sourcePolicyId: string; targetPolicyId: string }>()
 
   for (const entry of affectedEntries) {

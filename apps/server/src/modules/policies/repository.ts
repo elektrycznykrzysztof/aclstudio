@@ -78,7 +78,14 @@ export function findVlanEndpointAssignments(vlanIds: string[]) {
 }
 
 export function findPoliciesForVlans(vlanIds: string[]) {
-  return prisma.policy.findMany({ where: { vlanId: { in: vlanIds } }, select: { id: true, vlanId: true } })
+  return prisma.policy.findMany({
+    where: { vlanId: { in: vlanIds } },
+    select: {
+      id: true,
+      vlanId: true,
+      vlan: { select: { name: true, ipAddress: true, mask: true } },
+    },
+  })
 }
 
 export function countReflectiveEntries(policyId: string) {

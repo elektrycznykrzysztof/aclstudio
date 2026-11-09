@@ -99,6 +99,7 @@ export async function generateAndDeliverPolicy(policyId: string, switchId: strin
     policy,
     ...linkedPolicies.map(({ targetPolicy }) => targetPolicy).filter(({ id }) => id !== policy.id),
   ]
+  policiesToGenerate.forEach(({ vlan }) => requireVlanNetwork(vlan))
   const results: Array<{
     policyId: string
     policyName: string
@@ -151,6 +152,12 @@ function toSafeFileName(value: string): string {
   return safeName || 'policy'
 }
 
+function requireVlanNetwork(vlan: { name: string; ipAddress: string | null; mask: string | null }) {
+  if (!vlan.ipAddress || !vlan.mask) {
+    throw new AppError(`VLAN ${vlan.name} requires an IP address and mask for its automatic Allow Self entry.`, 400)
+  }
+}
+
 async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
   const description = requireText(input.description, 'Description')
   const vlanId = requireText(input.vlanId, 'VLAN')
@@ -163,6 +170,7 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
   }
   const vlan = await findVlan(vlanId)
   if (!vlan) throw new AppError('Selected VLAN does not exist.', 400)
+  requireVlanNetwork(vlan)
   const conflictingPolicy = await findConflictingPolicyForVlan(vlanId, policyId)
   if (conflictingPolicy) {
     throw new AppError('This VLAN already has a policy. Each VLAN can be assigned to only one policy.', 409)
@@ -207,9 +215,13 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
     .map(({ vlanId }) => vlanId)
     .filter((destinationVlanId) => destinationVlanId !== vlanId))]
   const targetPolicies = await findPoliciesForVlans(targetVlanIds)
+  targetPolicies.forEach(({ vlan: targetVlan }) => requireVlanNetwork(targetVlan))
   const existingTargetVlanIds = new Set(targetPolicies.map(({ vlanId: targetVlanId }) => targetVlanId))
   const missingTargetVlanIds = targetVlanIds.filter((targetVlanId) => !existingTargetVlanIds.has(targetVlanId))
   const missingTargetVlans = await Promise.all(missingTargetVlanIds.map((targetVlanId) => findVlan(targetVlanId)))
+  missingTargetVlans.forEach((targetVlan) => {
+    if (targetVlan) requireVlanNetwork(targetVlan)
+  })
   const reflectivePolicies = await createReflectivePolicyPlans(
     missingTargetVlans.filter((targetVlan): targetVlan is NonNullable<typeof targetVlan> => targetVlan !== null),
     name,
