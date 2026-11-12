@@ -31,6 +31,7 @@ export function formatPolicy(policy: PolicyForFormatting): string {
     return sourceHosts.flatMap((sourceHost) => destinationHosts.map((destinationHost) => {
       entryNumber += 1
       return formatPermitEntry(
+        policy.vlan.name,
         entryNumber,
         sourceHost,
         destinationHost,
@@ -81,6 +82,7 @@ function expandEndpoints(
 }
 
 function formatPermitEntry(
+  vlanName: string,
   entryNumber: number,
   sourceHost: HostForFormatting,
   destinationHost: HostForFormatting,
@@ -89,9 +91,8 @@ function formatPermitEntry(
   destinationPort: string | null,
   isReflective: boolean,
 ): string {
-  const entryName = formatAclName(
-    'perm_' + String(entryNumber).padStart(4, '0') + '_' + sourceHost.name + '_to_' + destinationHost.name,
-  ) + (isReflective ? '_r' : '')
+  const entryName = formatAclName(vlanName) + '_' + entryNumber + (isReflective ? '_r' : '')
+  const description = '@description "Source: ' + escapeDescriptionValue(sourceHost.name) + '; Destination: ' + escapeDescriptionValue(destinationHost.name) + '"'
   const matchLines = [
     '    source-address ' + sourceHost.ipAddress + '/' + sourceHost.mask + ';',
     '    destination-address ' + destinationHost.ipAddress + '/' + destinationHost.mask + ';',
@@ -101,6 +102,7 @@ function formatPermitEntry(
   if (destinationPort) matchLines.push('    destination-port ' + destinationPort + ';')
 
   return [
+    description,
     'entry "' + entryName + '" {',
     '  if match all {',
     ...matchLines,
@@ -110,6 +112,10 @@ function formatPermitEntry(
     '  }',
     '}',
   ].join('\n')
+}
+
+function escapeDescriptionValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/[\r\n]+/g, ' ')
 }
 
 function formatLocalNetworkDenies(): string[] {
