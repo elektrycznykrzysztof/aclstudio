@@ -53,6 +53,7 @@ const form = reactive<PolicyForm>({
 })
 const activeTab = ref<'create' | 'created' | 'search'>('create')
 const editingId = ref<string | null>(null)
+const entrySearch = ref('')
 const generatedPolicies = reactive<Record<string, GeneratedPolicy>>({})
 const vlanOptions = computed<SearchOption[]>(() => props.vlans
   .filter((vlan) => !props.policies.some((policy) => policy.vlanId === vlan.id && policy.id !== editingId.value))
@@ -104,7 +105,15 @@ const hasValidEntries = computed(() =>
     : form.entries.every(({ source, destination }) => source !== '' && destination !== ''),
 )
 
+const filteredEntries = computed(() => {
+  const query = entrySearch.value.trim().toLocaleLowerCase()
+  return form.entries
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ entry }) => !query || getEntrySearchText(entry).includes(query))
+})
+
 function addEntry() {
+  entrySearch.value = ''
   form.entries.push(emptyEntry())
 }
 
@@ -129,35 +138,86 @@ function getEntryName(entry: PolicyEntryForm): string {
   return `${sourceName} → ${destinationName}`
 }
 
+function getEntrySearchText(entry: PolicyEntryForm): string {
+  const sourceOption = entityOptions.value.find(({ value }) => value === entry.source)
+  const destinationOption = entityOptions.value.find(({ value }) => value === entry.destination)
+  return [
+    sourceOption?.label,
+    sourceOption?.detail,
+    sourceOption?.searchText,
+    destinationOption?.label,
+    destinationOption?.detail,
+    destinationOption?.searchText,
+    entry.protocol,
+    entry.destinationPort,
+    entry.description,
+  ].filter(Boolean).join(' ').toLocaleLowerCase()
+}
+
+function toPolicyEntryForm(entry: Policy['entries'][number]): PolicyEntryForm {
+  return {
+    source: entry.sourceHost
+      ? 'HOST:' + entry.sourceHost.id
+      : entry.sourceGroup
+        ? 'GROUP:' + entry.sourceGroup.id
+        : 'VLAN:' + (entry.sourceVlan?.id ?? ''),
+    destination: entry.destinationHost
+      ? 'HOST:' + entry.destinationHost.id
+      : entry.destinationGroup
+        ? 'GROUP:' + entry.destinationGroup.id
+        : 'VLAN:' + (entry.destinationVlan?.id ?? ''),
+    protocol: entry.protocol ?? '',
+    destinationPort: entry.destinationPort ?? '',
+    description: entry.description ?? '',
+  }
+}
+
+function groupEntriesByDestinationPort(entries: Policy['entries']): PolicyEntryForm[] {
+  const groupedEntries = new Map<string, PolicyEntryForm>()
+  const formEntries: PolicyEntryForm[] = []
+
+  for (const entry of entries) {
+    const formEntry = toPolicyEntryForm(entry)
+    if (!formEntry.destinationPort) {
+      formEntries.push(formEntry)
+      continue
+    }
+
+    const groupKey = JSON.stringify([
+      formEntry.source,
+      formEntry.destination,
+      formEntry.protocol,
+      formEntry.description,
+    ])
+    const groupedEntry = groupedEntries.get(groupKey)
+    if (groupedEntry) {
+      groupedEntry.destinationPort += ', ' + formEntry.destinationPort
+    } else {
+      groupedEntries.set(groupKey, formEntry)
+      formEntries.push(formEntry)
+    }
+  }
+
+  return formEntries
+}
+
 function startEdit(policy: Policy) {
   editingId.value = policy.id
+  entrySearch.value = ''
   const editableEntries = policy.entries.filter(({ reflectiveOfEntryId }) => !reflectiveOfEntryId)
   Object.assign(form, {
     id: policy.id,
     description: policy.description,
     vlanId: policy.vlanId,
     internetAccess: policy.internetAccess,
-    entries: editableEntries.map((entry) => ({
-        source: entry.sourceHost
-          ? 'HOST:' + entry.sourceHost.id
-          : entry.sourceGroup
-            ? 'GROUP:' + entry.sourceGroup.id
-            : 'VLAN:' + (entry.sourceVlan?.id ?? ''),
-        destination: entry.destinationHost
-          ? 'HOST:' + entry.destinationHost.id
-          : entry.destinationGroup
-            ? 'GROUP:' + entry.destinationGroup.id
-            : 'VLAN:' + (entry.destinationVlan?.id ?? ''),
-        protocol: entry.protocol ?? '',
-        destinationPort: entry.destinationPort ?? '',
-        description: entry.description ?? '',
-      })),
+    entries: groupEntriesByDestinationPort(editableEntries),
   })
   activeTab.value = 'create'
 }
 
 function cancelEdit() {
   editingId.value = null
+  entrySearch.value = ''
   Object.assign(form, {
     id: undefined,
     description: '',
@@ -274,20 +334,22 @@ async function generatePolicy(policyId: string, switchId: string): Promise<Gener
 
         <div class="pair-section">
           <div class="pair-section-heading"><span>Policy entries</span><button class="text-button" type="button" @click="addEntry">＋ Add entry</button></div>
+          <label v-if="editingId" class="field"><span>Search entries</span><input v-model="entrySearch" type="search" placeholder="Find by source, destination, IP, port, protocol, or description…" /></label>
           <div v-if="!entityOptions.length" class="dependency-note">Create a host or a group before adding a policy entry.</div>
-          <article v-for="(entry, index) in form.entries" :key="index" class="policy-entry-form">
-            <div class="policy-entry-form-heading"><strong>Entry {{ index + 1 }}</strong><button class="remove-pair" type="button" :aria-label="'Remove entry ' + (index + 1)" @click="removeEntry(index)">×</button></div>
+          <article v-for="item in filteredEntries" :key="item.index" class="policy-entry-form">
+            <div class="policy-entry-form-heading"><strong>Entry {{ item.index + 1 }}</strong><button class="remove-pair" type="button" :aria-label="'Remove entry ' + (item.index + 1)" @click="removeEntry(item.index)">×</button></div>
             <div class="policy-entry-endpoints searchable-pair-row">
-              <label class="field"><span>Source</span><SearchableSelect v-model="entry.source" :options="entityOptions" placeholder="Select host or group" search-placeholder="Search host, group, name, or IP…" /></label>
+              <label class="field"><span>Source</span><SearchableSelect v-model="item.entry.source" :options="entityOptions" placeholder="Select host or group" search-placeholder="Search host, group, name, or IP…" /></label>
               <span class="pair-arrow">→</span>
-              <label class="field"><span>Destination</span><SearchableSelect v-model="entry.destination" :options="entityOptions" placeholder="Select host or group" search-placeholder="Search host, group, name, or IP…" /></label>
+              <label class="field"><span>Destination</span><SearchableSelect v-model="item.entry.destination" :options="entityOptions" placeholder="Select host or group" search-placeholder="Search host, group, name, or IP…" /></label>
             </div>
             <div class="policy-entry-optional-fields">
-              <label class="field"><span>Protocol <small>Optional</small></span><input v-model="entry.protocol" maxlength="32" placeholder="e.g. tcp" /></label>
-              <label class="field"><span>Port <small>Optional</small></span><input v-model="entry.destinationPort" maxlength="11" placeholder="e.g. 443 or 8000-8010" /></label>
+              <label class="field"><span>Protocol <small>Optional</small></span><input v-model="item.entry.protocol" maxlength="32" placeholder="e.g. tcp" /></label>
+              <label class="field"><span>Destination ports <small>Optional</small></span><input v-model="item.entry.destinationPort" maxlength="200" placeholder="e.g. 443, 8443 or 8000-8010" /></label>
             </div>
-            <label class="field"><span>Description <small>Optional</small></span><input v-model="entry.description" maxlength="200" placeholder="Describe this policy entry" /></label>
+            <label class="field"><span>Description <small>Optional</small></span><input v-model="item.entry.description" maxlength="200" placeholder="Describe this policy entry" /></label>
           </article>
+          <div v-if="editingId && filteredEntries.length === 0" class="dependency-note">No entries match this search.</div>
           <small class="field-hint">Selecting a group expands it to its hosts. Selecting a VLAN uses its configured IP address and mask as a single endpoint.</small>
           <small class="field-hint">A cross-VLAN destination adds a linked reflective entry. If the destination VLAN has no policy yet, one is created automatically.</small>
         </div>

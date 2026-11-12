@@ -1,6 +1,6 @@
 import { AppError } from '../../shared/app-error'
 import { isRecordNotFoundError, isUniqueConstraintError } from '../../shared/prisma-errors'
-import { optionalPort, optionalProtocol, optionalText, requireText } from '../../shared/validation'
+import { optionalPorts, optionalProtocol, optionalText, requireText } from '../../shared/validation'
 import { getSwitchConfig } from '../switches/config'
 import { uploadPolicyFile } from '../switches/sftp-client'
 import { findVlan } from '../vlans/service'
@@ -159,6 +159,10 @@ function requireVlanNetwork(vlan: { name: string; ipAddress: string | null; mask
 }
 
 async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
+  const policyEntries = input.entries.flatMap((entry) => optionalPorts(entry.destinationPort).map((destinationPort) => ({
+    ...entry,
+    destinationPort: destinationPort ?? undefined,
+  })))
   const description = requireText(input.description, 'Description')
   const vlanId = requireText(input.vlanId, 'VLAN')
   if (policyId) {
@@ -183,7 +187,7 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
     }
   }
 
-  const selections = input.entries.flatMap(({ source, destination }) => [
+  const selections = policyEntries.flatMap(({ source, destination }) => [
     normalizeSelection(source, 'Source'),
     normalizeSelection(destination, 'Destination'),
   ])
@@ -207,7 +211,7 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
 
   const hostVlanById = new Map(hostAssignments.map(({ id, vlanId }) => [id, vlanId]))
   const groupVlanById = new Map(groupAssignments.map(({ id, vlanId }) => [id, vlanId]))
-  const destinationVlanByPosition = input.entries.map(({ destination }, position) => ({
+  const destinationVlanByPosition = policyEntries.map(({ destination }, position) => ({
     position,
     vlanId: getSelectionVlanId(normalizeSelection(destination, 'Destination'), hostVlanById, groupVlanById),
   }))
@@ -228,7 +232,7 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
     policyId,
   )
 
-  const entries: PolicyEntryRecord[] = input.entries.map((entry, position) => {
+  const entries: PolicyEntryRecord[] = policyEntries.map((entry, position) => {
     const source = normalizeSelection(entry.source, 'Source')
     const destination = normalizeSelection(entry.destination, 'Destination')
     return {
@@ -241,13 +245,13 @@ async function normalizePolicy(input: CreatePolicyInput, policyId?: string) {
       destinationVlanId: destination.type === 'VLAN' ? destination.id : null,
       sourcePort: null,
       protocol: optionalProtocol(entry.protocol),
-      destinationPort: optionalPort(entry.destinationPort),
+      destinationPort: entry.destinationPort ?? null,
       description: optionalText(entry.description, 'Entry description'),
     }
   })
 
   const reflectiveEntries = createReflectiveEntries(
-    input.entries,
+    policyEntries,
     entries,
     destinationVlanByPosition,
     vlanId,

@@ -48,6 +48,22 @@ export function optionalText(value: string | undefined, fieldName: string): stri
 export function optionalPort(value: string | undefined): string | null {
   const normalized = optionalText(value, 'Destination port')
   if (!normalized) return null
+  return validatePort(normalized)
+}
+
+export function optionalPorts(value: string | undefined): Array<string | null> {
+  const normalized = optionalText(value, 'Destination port')
+  if (!normalized) return [null]
+
+  const ports = normalized.split(',').map((port) => port.trim())
+  if (ports.some((port) => port.length === 0)) {
+    throw new AppError('Destination ports must be separated by commas and cannot be empty.', 400)
+  }
+
+  return ports.map(validatePort)
+}
+
+function validatePort(normalized: string): string {
   const validPort = /^(\d{1,5})(?:-(\d{1,5}))?$/.exec(normalized)
   if (!validPort) throw new AppError('Destination port must be a number or a port range.', 400)
   const startPort = Number(validPort[1])
